@@ -1,0 +1,14 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/home/vscode/workspace:cached
+    command: sleep infinity
+    networks:
+      - dev-network
+
+networks:
+  dev-network:
+    driver: bridge

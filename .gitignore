@@ -1,0 +1,28 @@
+# Virtual environments and local environment variables
+.venv/
+.env
+.env.*
+!.env.example
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# Build and packaging output
+build/
+dist/
+*.egg-info/
+
+# Test coverage
+.coverage
+.coverage.*
+htmlcov/
+
+# OS and editor files
+.DS_Store
+*.swp
+*.swo
