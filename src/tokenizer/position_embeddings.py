@@ -109,4 +109,21 @@ For example:
 
 The token embedding carries token-specific information, while the position
 embedding carries position-specific information. For example: what does it mean for a token to be at position 0 versus position 2 in the sequence?
+
+What happens at the linear algebra level: 
+
+Think of the 256-dimensional space as a 3D room:
+1. Token Subspace: The flat floor (2D).
+2. Position Subspace: The vertical height (1D).
+3. Where the Combined Vector Lives: Somewhere floating in the 3D room (e.g., 3 feet East, 1 foot North, and 2 feet up in the air).
+
+Once the vector is floating in that combined space x_i = token_embedding_i + position_embedding_i, the Transformer's next layer (Self-Attention) multiplies {x}_{i} by weight matrices W_{Q}, W_{K}, (W_{V}). Depending on what a specific attention head needs to do, those matrices can interact with the subspaces in three ways:
+• Read Only Meaning: Zero out the vertical (position) coordinates to project the vector back down onto the floor—useful for finding synonyms regardless of where they appear.
+
+• Read Only Position: Zero out the floor (meaning) coordinates to look purely at vertical height—useful for an attention head whose only job is "always look at the immediately preceding word."
+
+• Mix Both Together: Tilt the projection plane diagonally through the room so that meaning and position interact—for example, identifying whether "apple" appears at the start of a sentence (likely the subject) versus the end (likely the object).
+
+Refer to token_position_interaction.png for a visual representation of how token and position subspaces interact in the combined vector space.
+
 """
