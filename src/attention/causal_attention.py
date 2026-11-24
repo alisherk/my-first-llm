@@ -100,7 +100,7 @@ tensor([[-0.1114,    -inf,    -inf,    -inf,    -inf,    -inf],
         [ 0.0116,  0.0196,  0.0196,  0.0106,  0.0135,  0.0116]],
        grad_fn=<MaskedFillBackward0>)
 
-• The old way (tril after softmax):
+• The old way:
     - In math e^0 = 1.
 	- Instead of turning a future word's weight into 0, putting a 0 score gives that future word a positive share of 1 in the softmax pool—so the model would still pay attention to future words!
     - so there are additional calculations needed to renormalize the attention weights after masking.
