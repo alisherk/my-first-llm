@@ -1,6 +1,6 @@
-# when multiplying matrices it is important that inner dimensions match
+# when multiplying matrices it is important that inner dimensions match of the matrices macth
 
-Example 1:
+## Example 1: Switching Order of Multiplication
 
 Suppose we have matrix `inputs` with shape (6, 3) and `attn_weights` with shape (6, 6)
 
@@ -30,16 +30,37 @@ if we try to multiply `inputs` with `attn_weights` as they are, we get an error:
 RuntimeError: mm: mat1 and mat2 shapes cannot be multiplied (6x3 and 6x6)
 the columns of the first matrix must match the rows of the second matrix.
 
-The error happens because the number of columns in `inputs` (3) does not match the number of rows in `attn_weights` (6).
-What we need to do is either transpose `attn_weights` or adjust the shapes so that the inner dimensions match. For example, we could use `attn_weights.T` which has shape (6, 6).T -> (6, 6) -> (6, 6) (in this case, it remains the same, but generally transposing changes the shape to make multiplication possible).
+The error happens because the number of columns in `inputs` does not match the number of rows in `attn_weights`.
+What we need to do is either transpose `attn_weights` and multiply it with `inputs`, or adjust the shapes so that the inner dimensions match.
 
-In this case we can simply switch the order of multiplication:
-all_context_vectors = attn_weights @ inputs
+Or, in this case we can simply switch the order of multiplication:
+all_context_vectors = attn_weights @ inputs so that our shapes match: (6, 6) @ (6, 3) -> (6, 3)
 
 
-## Example 2: Switching Order of Multiplication
+## Example 2: Transposing Keys to Match Shapes
 1. WHY (6, 1) @ (6, 1) FAILS:
-   "Walk across columns of A (1 step) while walking down rows of B (6 steps)" -> Mismatch!
+
+  queries shape = [6, 1]
+   queries = torch.tensor([
+       [0.3830],
+       [0.4763],
+       [0.4537],
+       [0.3028],
+       [-0.0808],
+       [0.5371]
+   ])
+
+  keys shape = [6, 1]
+   keys = torch.tensor([
+       [0.1413],
+       [0.5704],
+       [0.5724],
+       [0.3304],
+       [0.4462],
+       [0.3310]
+   ])
+
+   (6, 1) @ (6, 1)  # Fails because inner dimensions do not match
 
    QUERIES (6 x 1)        KEYS (6 x 1)
    +---------+            +---------+
@@ -85,70 +106,89 @@ all_context_vectors = attn_weights @ inputs
    +--------+--------+--------+--------+--------+--------+
      key 0    key 1    key 2    key 3    key 4    key 5
 
-## Example 3 
-We have attenttion weights 
+## Example 3 (success when shapes match)
 attention weights shape torch.Size([2, 2, 6, 6])
-            attn_weights:  tensor([[[
-            [1.1111, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
-            [0.4990, 0.6121, 0.0000, 0.0000, 0.0000, 0.0000],
-            [0.3238, 0.3935, 0.0000, 0.0000, 0.0000, 0.0000],
-            [0.2562, 0.2917, 0.2919, 0.2713, 0.0000, 0.0000],
-            [0.2271, 0.2194, 0.2193, 0.2237, 0.0000, 0.0000],
-            [0.1608, 0.2024, 0.0000, 0.1779, 0.1894, 0.1780]],
-
-            [[1.1111, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
-            [0.5597, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
-            [0.3734, 0.3683, 0.3693, 0.0000, 0.0000, 0.0000],
-            [0.2831, 0.2795, 0.2802, 0.2682, 0.0000, 0.0000],
-            [0.2201, 0.2223, 0.2219, 0.2299, 0.2169, 0.0000],
-            [0.1928, 0.1883, 0.1892, 0.1742, 0.1993, 0.1673]]],
-
-
-            [[[1.1111, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
-            [0.0000, 0.6121, 0.0000, 0.0000, 0.0000, 0.0000],
-            [0.3238, 0.3935, 0.3938, 0.0000, 0.0000, 0.0000],
-            [0.2562, 0.2917, 0.2919, 0.2713, 0.0000, 0.0000],
-            [0.2271, 0.2194, 0.2193, 0.2237, 0.2216, 0.0000],
-            [0.1608, 0.2024, 0.0000, 0.1779, 0.0000, 0.1780]],
-
-            [[1.1111, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
-            [0.5597, 0.5514, 0.0000, 0.0000, 0.0000, 0.0000],
-            [0.3734, 0.3683, 0.3693, 0.0000, 0.0000, 0.0000],
-            [0.2831, 0.2795, 0.2802, 0.2682, 0.0000, 0.0000],
-            [0.2201, 0.2223, 0.2219, 0.2299, 0.2169, 0.0000],
-            [0.1928, 0.1883, 0.1892, 0.1742, 0.1993, 0.1673]]]],
+        tensor([
+            [
+              [
+                [1.1111, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                [0.4990, 0.6121, 0.0000, 0.0000, 0.0000, 0.0000],
+                [0.3238, 0.3935, 0.0000, 0.0000, 0.0000, 0.0000],
+                [0.2562, 0.2917, 0.2919, 0.2713, 0.0000, 0.0000],
+                [0.2271, 0.2194, 0.2193, 0.2237, 0.0000, 0.0000],
+                [0.1608, 0.2024, 0.0000, 0.1779, 0.1894, 0.1780]
+              ],
+              [
+                [1.1111, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                [0.5597, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                [0.3734, 0.3683, 0.3693, 0.0000, 0.0000, 0.0000],
+                [0.2831, 0.2795, 0.2802, 0.2682, 0.0000, 0.0000],
+                [0.2201, 0.2223, 0.2219, 0.2299, 0.2169, 0.0000],
+                [0.1928, 0.1883, 0.1892, 0.1742, 0.1993, 0.1673]
+              ]
+            ],
+            [
+              [
+                [1.1111, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                [0.0000, 0.6121, 0.0000, 0.0000, 0.0000, 0.0000],
+                [0.3238, 0.3935, 0.3938, 0.0000, 0.0000, 0.0000],
+                [0.2562, 0.2917, 0.2919, 0.2713, 0.0000, 0.0000],
+                [0.2271, 0.2194, 0.2193, 0.2237, 0.2216, 0.0000],
+                [0.1608, 0.2024, 0.0000, 0.1779, 0.0000, 0.1780]
+            ],
+              [
+                [1.1111, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                [0.5597, 0.5514, 0.0000, 0.0000, 0.0000, 0.0000],
+                [0.3734, 0.3683, 0.3693, 0.0000, 0.0000, 0.0000],
+                [0.2831, 0.2795, 0.2802, 0.2682, 0.0000, 0.0000],
+                [0.2201, 0.2223, 0.2219, 0.2299, 0.2169, 0.0000],
+                [0.1928, 0.1883, 0.1892, 0.1742, 0.1993, 0.1673]
+              ]
+            ]
+          ]
         grad_fn=<MulBackward0>)
 
-and we have values tensor of shape [2, 2, 6, 1] as follows:
-values shape torch.Size([2, 2, 6, 1])
-        values tensor([[[
-          [0.4429],
-          [0.4864],
-          [0.4878],
-          [0.2311],
-          [0.3758],
-          [0.2370]],
+      and we have values tensor of shape [2, 2, 6, 1] as follows:
+          tensor([
+          [
+            [
+              [0.4429],
+              [0.4864],
+              [0.4878],
+              [0.2311],
+              [0.3758],
+              [0.2370]
+            ],
+            [
+              [0.1077],
+              [0.3987],
+              [0.3865],
+              [0.2684],
+              [0.0570],
+              [0.3989]
+            ],
+          ],
+          [
+            [
+              [0.4429],
+              [0.4864],
+              [0.4878],
+              [0.2311],
+              [0.3758],
+              [0.2370]
+            ],
+            [
+              [0.1077],
+              [0.3987],
+              [0.3865],
+              [0.2684],
+              [0.0570],
+              [0.3989]
+            ]
+          ]
+        ], grad_fn=<TransposeBackward0>)
 
-         [[0.1077],
-          [0.3987],
-          [0.3865],
-          [0.2684],
-          [0.0570],
-          [0.3989]]],
-
-        [[[0.4429],
-          [0.4864],
-          [0.4878],
-          [0.2311],
-          [0.3758],
-          [0.2370]],
-
-         [[0.1077],
-          [0.3987],
-          [0.3865],
-          [0.2684],
-          [0.0570],
-          [0.3989]]]], grad_fn=<TransposeBackward0>)
+In this example, we demonstrate how the attention weights matrix (6 x 6) is multiplied with the values matrix (6 x 1) to produce a context-aware representation for each token. So shapes match for matrix multiplication and we can successfully compute the resulting context vectors.
 
 ATTN_WEIGHTS: (6 rows, 6 cols)        VALUES: (6 rows, 1 col)
                                               1 column
@@ -202,6 +242,8 @@ A Quick Memory Trick
 Write the shapes next to each other and check the "inner neighbors":
 • (6, 6) @ (6, 3) -> Inner numbers are 6 and 6 (Match! Outer numbers give the output shape: (6, 3)).
 • (6, 3) @ (6, 6) -> Inner numbers are 3 and 6 (Mismatch!).
+
+# Rows need to match the columns or columns need to match the rows for matrix multiplication to be valid.
 
 """
 TRICK FOR MATCHING QUERIES & KEYS IN 3D (AND 4D): "COVER THE BATCH, KISS THE MIDDLE"
