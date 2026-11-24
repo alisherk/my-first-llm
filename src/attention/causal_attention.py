@@ -1,5 +1,9 @@
 """
 for many LLM tasks, we want the self-attention mechanism to be causal, meaning that each token can only attend to previous tokens and itself, but not to future tokens. This ensures that the model generates text in a left-to-right manner, respecting the autoregressive property of language modeling.
+
+It is called "causal" attention because it strictly obeys the law of cause and effect: an earlier word (the cause) can influence a later word (the effect), never the other way around.
+
+In physics and statistics, causality means that an event at time t can only depend on events that happened at or before time t—never on events from the future (t + 1, t + 2, ...).
 """
 
 # WE WILL MODIFY STANDARD SELF-ATTENTION TO INCORPORATE A CAUSAL ATTENTION MECHANISM BY MASKING FUTURE TOKENS
