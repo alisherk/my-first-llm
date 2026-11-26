@@ -44,3 +44,14 @@ keys = torch.tensor([
 ])
 
 output3 = queries @ keys.T
+
+a = torch.tensor([[6, 1], [3, 1]])
+# a shape torch.Size([2, 2])
+b = torch.tensor([[1, 2]])
+# b shape torch.Size([1, 2])
+# b shape Transpose torch.Size([2, 1]) => [[1],[2]]
+
+# row 0: 6*1 + 1*2 = 8
+# row 1: 3*1 + 1*2 = 5
+c = a @ b.T # [[8],[5]]
+

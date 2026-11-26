@@ -11,6 +11,7 @@ from torch import manual_seed, optim, tensor
 from torch.utils.data import DataLoader, Dataset
 
 # lets create a small toy dataset
+# review how these points map on 2D plane in toy_dataset.png
 X_train = tensor([
     [-1.2, 3.1], 
     [-0.9, 2.9], 
@@ -18,7 +19,8 @@ X_train = tensor([
     [2.3, -1.1], 
     [2.7, -1.5]
 ]) 
-    
+
+# review how y train seperates these classes in points_classification.png
 y_train = tensor([0, 0, 0, 1, 1])
 
 x_test = tensor([

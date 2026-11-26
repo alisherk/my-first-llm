@@ -213,6 +213,7 @@ class MultiHeadAttention(torch.nn.Module):
         # view() only groups the features; it does not calculate attention.
         keys = keys.view(batch_size, num_tokens, self.num_heads, self.head_dim)
         """
+        shape.Size([2, 6, 2, 1])
         tensor([Start of Dimension 0: batch_size = 2 (holds 2 batch items)
                 [ Batch 0 | Start of Dimension 1: num_tokens = 6 (holds 6 tokens)
 
@@ -324,10 +325,11 @@ class MultiHeadAttention(torch.nn.Module):
             queries: [batch=2, heads=2, tokens=6, head_dim=1]
             keys:    [batch=2, heads=2, tokens=6, head_dim=1]
 
+        (2, 2, 6, 1) does not match (2, 2, 6, 1) because the last dimension of queries (head_dim) must match the third dimension of keys (tokens) for matrix multiplication.
+
         before calling keys.transpose(2, 3), keys are grouped by token:
 
         keys = torch.tensor([
-            # ================= BATCH 0 =================
             [
                 # --- Head 0 (shape:) ---
                 [
@@ -348,8 +350,6 @@ class MultiHeadAttention(torch.nn.Module):
                     [ 0.4397],  # token 5
                 ],
             ],
-
-            # ================= BATCH 1 =================
             [
                 # --- Head 0 (shape:) ---
                 [
@@ -365,9 +365,9 @@ class MultiHeadAttention(torch.nn.Module):
                     [-0.6600]
                 ],
         ])
-        # keys.shape -> torch.Size([2, 2, 6, 1])
+        # keys.shape -> torch.Size([2, 2, 6, 1]) before transposing
 
-        keys_transposed = keys.transpose(2, 3)
+        keys_transposed = keys.transpose(2, 3) turns it into (2, 2, 1, 6)
         torch.tensor([
             # ================= BATCH 0 =================
             [
@@ -456,40 +456,29 @@ class MultiHeadAttention(torch.nn.Module):
         """
         attention scores shape torch.Size([2, 2, 6, 6])
         tensor([
-        [
-        [
-          [ 0.0541,    -inf,    -inf,    -inf,    -inf,    -inf],
-          [ 0.0673,  0.2717,    -inf,    -inf,    -inf,    -inf],
-          [ 0.0641,  0.2588,  0.2597,    -inf,    -inf,    -inf],
-          [ 0.0428,  0.1727,  0.1733,  0.1000,    -inf,    -inf],
-          [-0.0114, -0.0461, -0.0462, -0.0267, -0.0360,    -inf],
-          [ 0.0759,  0.3064,  0.3074,  0.1775,  0.2396,  0.1778]],
-
-         [
-          [-0.0033,    -inf,    -inf,    -inf,    -inf,    -inf],
-          [ 0.0860,  0.0711,    -inf,    -inf,    -inf,    -inf],
-          [ 0.0795,  0.0657,  0.0685,    -inf,    -inf,    -inf],
-          [ 0.0730,  0.0604,  0.0629,  0.0191,    -inf,    -inf],
-          [-0.0594, -0.0491, -0.0511, -0.0155, -0.0737,    -inf],
-          [ 0.1375,  0.1137,  0.1184,  0.0359,  0.1708, -0.0047]]
-        ],
-
-
-        [[[ 0.0541,    -inf,    -inf,    -inf,    -inf,    -inf],
-          [ 0.0673,  0.2717,    -inf,    -inf,    -inf,    -inf],
-          [ 0.0641,  0.2588,  0.2597,    -inf,    -inf,    -inf],
-          [ 0.0428,  0.1727,  0.1733,  0.1000,    -inf,    -inf],
-          [-0.0114, -0.0461, -0.0462, -0.0267, -0.0360,    -inf],
-          [ 0.0759,  0.3064,  0.3074,  0.1775,  0.2396,  0.1778]],
-
-         [[-0.0033,    -inf,    -inf,    -inf,    -inf,    -inf],
-          [ 0.0860,  0.0711,    -inf,    -inf,    -inf,    -inf],
-          [ 0.0795,  0.0657,  0.0685,    -inf,    -inf,    -inf],
-          [ 0.0730,  0.0604,  0.0629,  0.0191,    -inf,    -inf],
-          [-0.0594, -0.0491, -0.0511, -0.0155, -0.0737,    -inf],
-          [ 0.1375,  0.1137,  0.1184,  0.0359,  0.1708, -0.0047]]]],
-       grad_fn=<MaskedFillBackward0>)
-        
+          [ 
+            [
+              [ 0.0541,    -inf,    -inf,    -inf,    -inf,    -inf],
+              [ 0.0673,  0.2717,    -inf,    -inf,    -inf,    -inf],
+              [ 0.0641,  0.2588,  0.2597,    -inf,    -inf,    -inf],
+              [ 0.0428,  0.1727,  0.1733,  0.1000,    -inf,    -inf],
+              [-0.0114, -0.0461, -0.0462, -0.0267, -0.0360,    -inf],
+              [ 0.0759,  0.3064,  0.3074,  0.1775,  0.2396,  0.1778],
+            ],
+            [
+              [-0.0033,    -inf,    -inf,    -inf,    -inf,    -inf],
+              [ 0.0860,  0.0711,    -inf,    -inf,    -inf,    -inf],
+              [ 0.0795,  0.0657,  0.0685,    -inf,    -inf,    -inf],
+              [ 0.0730,  0.0604,  0.0629,  0.0191,    -inf,    -inf],
+              [-0.0594, -0.0491, -0.0511, -0.0155, -0.0737,    -inf],
+              [ 0.1375,  0.1137,  0.1184,  0.0359,  0.1708, -0.0047],
+            ],
+          ],
+          [ 
+            [ ... 6 rows x 6 columns for head 0 ... ],
+            [ ... 6 rows x 6 columns for head 1 ... ],
+          ],
+        ], grad_fn=<MaskedFillBackward0>)
         """
 
         # Normalize over keys for each query in each head; dropout is active
@@ -502,16 +491,15 @@ class MultiHeadAttention(torch.nn.Module):
         # [batch, heads, tokens, head_dim] -> [batch, tokens, heads, head_dim].
         """
         attention weights shape torch.Size([2, 2, 6, 6])
-            attn_weights:  tensor(
-        [
-            [
+        tensor([
+            [ 
                 [
                     [1.1111, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
                     [0.4990, 0.6121, 0.0000, 0.0000, 0.0000, 0.0000],
                     [0.3238, 0.3935, 0.0000, 0.0000, 0.0000, 0.0000],
                     [0.2562, 0.2917, 0.2919, 0.2713, 0.0000, 0.0000],
                     [0.2271, 0.2194, 0.2193, 0.2237, 0.0000, 0.0000],
-                    [0.1608, 0.2024, 0.0000, 0.1779, 0.1894, 0.1780]
+                    [0.1608, 0.2024, 0.0000, 0.1779, 0.1894, 0.1780],
                 ],
                 [
                     [1.1111, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
@@ -519,17 +507,17 @@ class MultiHeadAttention(torch.nn.Module):
                     [0.3734, 0.3683, 0.3693, 0.0000, 0.0000, 0.0000],
                     [0.2831, 0.2795, 0.2802, 0.2682, 0.0000, 0.0000],
                     [0.2201, 0.2223, 0.2219, 0.2299, 0.2169, 0.0000],
-                    [0.1928, 0.1883, 0.1892, 0.1742, 0.1993, 0.1673]
-                ]
+                    [0.1928, 0.1883, 0.1892, 0.1742, 0.1993, 0.1673],
+                ],
             ],
-            [
+            [ 
                 [
                     [1.1111, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
                     [0.0000, 0.6121, 0.0000, 0.0000, 0.0000, 0.0000],
                     [0.3238, 0.3935, 0.3938, 0.0000, 0.0000, 0.0000],
                     [0.2562, 0.2917, 0.2919, 0.2713, 0.0000, 0.0000],
                     [0.2271, 0.2194, 0.2193, 0.2237, 0.2216, 0.0000],
-                    [0.1608, 0.2024, 0.0000, 0.1779, 0.0000, 0.1780]
+                    [0.1608, 0.2024, 0.0000, 0.1779, 0.0000, 0.1780],
                 ],
                 [
                     [1.1111, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
@@ -537,52 +525,50 @@ class MultiHeadAttention(torch.nn.Module):
                     [0.3734, 0.3683, 0.3693, 0.0000, 0.0000, 0.0000],
                     [0.2831, 0.2795, 0.2802, 0.2682, 0.0000, 0.0000],
                     [0.2201, 0.2223, 0.2219, 0.2299, 0.2169, 0.0000],
-                    [0.1928, 0.1883, 0.1892, 0.1742, 0.1993, 0.1673]
-                ]
-            ]
-        ]
-        grad_fn=<MulBackward0>)
+                    [0.1928, 0.1883, 0.1892, 0.1742, 0.1993, 0.1673],
+                ],
+            ],
+        ], grad_fn=<MulBackward0>)
 
-    values shape torch.Size([2, 2, 6, 1])
-        values tensor(
-    [
-        [
-           [
-                [0.4429],
-                [0.4864],
-                [0.4878],
-                [0.2311],
-                [0.3758],
-                [0.2370]
+        values shape torch.Size([2, 2, 6, 1])
+        tensor([
+            [
+                [
+                    [0.4429],
+                    [0.4864],
+                    [0.4878],
+                    [0.2311],
+                    [0.3758],
+                    [0.2370],
+                ],
+                [
+                    [0.1077],
+                    [0.3987],
+                    [0.3865],
+                    [0.2684],
+                    [0.0570],
+                    [0.3989],
+                ],
             ],
-            [
-                [0.1077],
-                [0.3987],
-                [0.3865],
-                [0.2684],
-                [0.0570],
-                [0.3989]]
-            ]
-        ],
-        [
-            [
-                [0.4429],
-                [0.4864],
-                [0.4878],
-                [0.2311],
-                [0.3758],
-                [0.2370]
+            [ 
+                [
+                    [0.4429],
+                    [0.4864],
+                    [0.4878],
+                    [0.2311],
+                    [0.3758],
+                    [0.2370],
+                ],
+                [
+                    [0.1077],
+                    [0.3987],
+                    [0.3865],
+                    [0.2684],
+                    [0.0570],
+                    [0.3989],
+                ],
             ],
-            [
-                [0.1077],
-                [0.3987],
-                [0.3865],
-                [0.2684],
-                [0.0570],
-                [0.3989]
-            ]
-        ]
-    ], grad_fn=<TransposeBackward0>)
+        ], grad_fn=<TransposeBackward0>)
         """
         context_vec = (attn_weights @ values).transpose(1, 2) 
 
@@ -704,7 +690,7 @@ CONCLUSION: WHAT HAVE WE LEARNED ABOUT MULTI-HEAD ATTENTION?
 
 - Multi-head attention allows the model to focus on different parts of the input sequence simultaneously.
 
-- Instead of creating separate nn.Linear layers per head, we combine them into one large linear projection (d_in -> d_out) for W_query, W_key, and W_value—and then slice/split the output into heads via .view() and .transpose(1, 2). That is why splitting via .view() works!
+- Instead of creating separate nn.Linear layers per head, we combine them into one large linear projection (d_in -> d_out) for W_query, W_key, and W_value—and then  slice/split the output into heads via .view() and .transpose(1, 2). That is why splitting via .view() works!
 
 - We can prepare each head to do computation independently, attending to different parts of the sequence.
 

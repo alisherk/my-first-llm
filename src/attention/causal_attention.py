@@ -214,8 +214,14 @@ class CausalAttention(torch.nn.Module):
 
         """
         we transpose here by swapping the last two dimensions of the keys tensor, 
-        because our keys have shape of [2, 6, 3] and we need it to be [2, 3, 6] for the matrix multiplication with queries of shape [2, 6, 3]
+        because our keys have shape of [2, 6, 3] and we need it to be [2, 3, 6] 
+        as it does not macth with queries shape [2, 6, 3]
+
+        (6, 3) @ (6, 3) no match for matrix multiplication
+        (6, 3) @ (3, 6) is valid for batch matrix multiplication
         """
+        print("keys shape:", keys.shape)
+        print("queries shape:", queries.shape)              
         attn_scores = queries @ keys.transpose(-2, -1)
 
         """
@@ -318,6 +324,7 @@ Calculation
 
 
 Whenever you multiply 3D tensors in PyTorch of shape [Batch, Tokens, Features], follow these 3 steps:
+Follow this trick: take the last number of the first 3D tensor and match it with the second number of the second 3D tenser. If they macth, the multiplication will be valid.
 
 1. COVER THE FIRST NUMBER (THE BATCH)
 Put your thumb over index 0 (Batch) on both shapes. PyTorch treats everything before the last two dimensions as independent parallel copies, 

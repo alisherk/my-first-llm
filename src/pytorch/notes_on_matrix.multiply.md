@@ -1,4 +1,9 @@
-# when multiplying matrices it is important that inner dimensions match of the matrices macth
+# when multiplying matrices it is important that inner dimensions match of the matrices match 
+
+## Quick tips to check if tensors match 
+- 2D - (6, 2) * (2, 3) -> last number of the first matrix and first number of the second matrix must match - Match
+- 3D - (2, 6, 3) * (2, 3, 6) -> last number of the first matrix and second number of the second matrix must match -> Match
+- 4D - (2, 3, 6, 4) * (2, 3, 4, 5) -> last number of the first matrix and the third number of the second matrix must match - Match
 
 ## Example 1: Switching Order of Multiplication
 

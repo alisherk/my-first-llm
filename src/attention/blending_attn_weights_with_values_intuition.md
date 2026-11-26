@@ -4,9 +4,9 @@ Our sentence is "Your journey starts with one step."
 
 ## Our first token: "Your"
 • Attention Weights (Row 0): [1.1111, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]
-• Values Column (V): [0.4429, 0.4864, 0.4878, 0.2311, 0.3758, 0.2370]
+• Values Column: [0.4429, 0.4864, 0.4878, 0.2311, 0.3758, 0.2370]
 
-     (1.1111 × 0.4429)  -> "Your"    (100% of active attention)
+      (1.1111 × 0.4429)  -> "Your"    (100% of active attention)
     + (0.0000 × 0.4864)  -> "journey" (masked out)
     + (0.0000 × 0.4878)  -> "starts"  (masked out)
     + (0.0000 × 0.2311)  -> "with"    (masked out)
@@ -19,7 +19,7 @@ Our sentence is "Your journey starts with one step."
 Because "step" sits at the end of the sentence, the causal mask lets it look back across every single word that came before it.
 
 • Attention Weights (Row 5): [0.1608, 0.2024, 0.0000, 0.1779, 0.1894, 0.1780]
-• Values Column (V):         [0.4429, 0.4864, 0.4878, 0.2311, 0.3758, 0.2370]
+• Values Column:             [0.4429, 0.4864, 0.4878, 0.2311, 0.3758, 0.2370]
 
       (0.1608 × 0.4429) = 0.0712  -> ~16% from "Your"    (personal subject)
     + (0.2024 × 0.4864) = 0.0984  -> ~20% from "journey" (biggest slice: main metaphor)
@@ -32,8 +32,8 @@ Because "step" sits at the end of the sentence, the causal mask lets it look bac
 
 ## Side-by-side summary
 
-| Token     | Visible context              | Blend                                            |  Result |
-| `"Your"`   (position 0) | Only `"Your"`  | 100% from `"Your"`                                 | 0.4921 |
+| Token     | Visible context              | Blend                                               | Result |
+| `"Your"`   (position 0) | Only `"Your"`  | 100% from `"Your"`                                  | 0.4921 |
 | `"step"`   (position 5) | All six tokens | *Mostly from earlier tokens, with 18% from `"step"` | 0.3241 |
 
 *The first 5 numbers (0.1608, 0.2024, 0.0000, 0.1779, 0.1894) in row 5 of attention_weights correspond to the earlier tokens ("Your", "journey", "starts", "with", "one"). Adding those weights up (0.1608 + 0.2024 + 0 + 0.1779 + 0.1894) gives 0.7305 (or ~73% of the active weight budget, which is ~80% of the total active slice since "starts" was dropped).
@@ -71,6 +71,7 @@ With 1 head, Softmax has to split a single 100% budget across "animal" (35%), "t
 2. How Multiple Heads Solve It (Parallel Specialists)
 
 With multiple heads, each head gets its own independent W_query, W_key, and W_value matrices—meaning each head can learn to ask a completely different question about the same sentence:
+
 • Head 1 (Pronoun Tracker): Puts 90% of its attention on "animal" so "it" knows who it refers to.
 • Head 2 (State/Adjective Tracker): Puts 85% of its attention on "tired" so "it" knows what condition it is in.
 • Head 3 (Next-Word / Local Context): Looks at "was" right after "it" to track tense and sentence flow.
